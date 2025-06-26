@@ -1,37 +1,33 @@
 import { Logger } from '@nestjs/common';
 import { Cluster } from 'couchbase';
-import * as couchbase from "couchbase"
 export const couchBaseFunctions = async (defaultOptions: any) => {
     const bucketName = defaultOptions?.bucketName
     const scopeName = defaultOptions?.scopeName
-    const clusterConnStr: string = process.env.COUCHBASE_URL;
-    const username: string = process.env.CB_USERNAME;
-    const password: string = process.env.PASSWORD;
     try {
-        let cluster: Cluster;
-        cluster = await couchbase.connect(clusterConnStr, {
-            username: username,
-            password: password,
-        });
+        const serviceName: string = defaultOptions?.services?.getSvcName()
+        let couchbaseService = await defaultOptions?.services
+        couchbaseService = couchbaseService?.getCbService()
+        const cbCluster: Cluster = await couchbaseService?.init(serviceName)
         return {
             query: async (
                 query: string,
             ): Promise<any> => {
                 try {
-                    const bucket = cluster.bucket(bucketName);
-                    const scope = bucket.scope(scopeName);
-                    return await scope.query(query);
+                    // const bucket = cluster.bucket(bucketName);
+                    // const scope = bucket.scope(scopeName);
+                    return await couchbaseService.query(bucketName, scopeName, query)
                 } catch (e) {
                     Logger.error('Error occurred in CouchBase query------->', e);
                     throw e;
                 }
             },
-            cluster,
+            cluster: cbCluster,
             get: async (
                 id: string, collectionname: string
             ): Promise<any> => {
                 try {
-                    return await cluster.bucket(bucketName).scope(scopeName).collection(collectionname).get(id);
+                    return await couchbaseService.get(bucketName, scopeName, collectionname, id)
+                    // return await cluster.bucket(bucketName).scope(scopeName).collection(collectionname).get(id);
                 } catch (e) {
                     Logger.error('Error occurred in CouchBase get function------->', e);
                     throw e;
@@ -44,8 +40,9 @@ export const couchBaseFunctions = async (defaultOptions: any) => {
                 collectionName: string
             ): Promise<any> => {
                 try {
-                    const collection = cluster.bucket(bucketName).scope(scopeName).collection(collectionName);
-                    return await collection.touch(id, time);
+                    return await couchbaseService.touch(bucketName, scopeName, collectionName, id, time)
+                    // const collection = cluster.bucket(bucketName).scope(scopeName).collection(collectionName);
+                    // return await collection.touch(id, time);
                 } catch (e) {
                     Logger.error('Error occurred in CouchBase touch function------->', e);
                     throw e;
@@ -59,8 +56,9 @@ export const couchBaseFunctions = async (defaultOptions: any) => {
                 ttlInSeconds?: number
             ): Promise<any> => {
                 try {
-                    const collection = cluster.bucket(bucketName).scope(scopeName).collection(collectionName);
-                    return await collection.insert(id, payload, { expiry: ttlInSeconds });
+                    return await couchbaseService.create(bucketName, scopeName, collectionName, id, payload, ttlInSeconds)
+                    // const collection = cluster.bucket(bucketName).scope(scopeName).collection(collectionName);
+                    // return await collection.insert(id, payload, { expiry: ttlInSeconds });
                 } catch (e) {
                     Logger.error('Error occurred in CouchBase create function------->', e);
                     throw e;
@@ -76,11 +74,11 @@ export const couchBaseFunctions = async (defaultOptions: any) => {
                             limit: 10000,
                         };
                     }
-                    const result = await cluster.searchQuery(indexName, couchbaseQuery, option)
+                    const result = await couchbaseService.ftsSearch(indexName, couchbaseQuery, option)
                     if (!result?.rows?.length) {
                         return []
                     }
-                    return result?.rows?.map((ids) => ids?.id)
+                    return result?.rows?.map((ids: any) => ids?.id)
                 } catch (e) {
                     Logger.error('Error occurred in CouchBase touch function------->', e);
                     throw e;

@@ -1,3 +1,7 @@
+export enum svcList {
+    AUTH_SVC = "AUTH_SVC",
+    USER_SVC = "USER_SVC"
+}
 export enum collection {
     USER = "User",
     SESSION = "Session",
@@ -7,3 +11,8 @@ export enum RoleList {
     ADMIN = "ADMIN",
     USER = "USER"
 }
+export enum RoleEnum {
+    ADMIN = 90,
+    USER = 60
+}
+export const ROLE_KEY = "Role"
