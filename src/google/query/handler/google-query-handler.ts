@@ -31,8 +31,8 @@ export class GoogleQueryHandler implements IQueryHandler<GoogleQueryImpl> {
                     query: getMutationQuery(finalPayload),
                 })
                 const token = await response?.data?.data?.AUTH_SVC_AUTH_SVC_googleRegistration?.token
-                const userData = await this.getSessionToken(token)
-                return userData
+                // const userData = await this.getSessionToken(token)
+                return token
             }
         }
         catch (err) {
