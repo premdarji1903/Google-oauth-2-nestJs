@@ -1,7 +1,7 @@
 
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { CouchbaseService } from './couchbase/couchbase.service';
-import axios from 'axios'
+import axios, { AxiosRequestConfig } from 'axios'
 const inst = {
   svcName: undefined
 }
@@ -38,19 +38,17 @@ export class CommonService {
   getSvcName(svcName?: string) {
     return inst.svcName ?? svcName
   }
-  async callAxiosApi(url?: string, options?: any) {
+  async callAxiosApi(url?: string, method?: string, data?: any) {
     try {
-      const response = await axios.post(
-        url ?? process.env.AUTH_SVC_URL,
-        {
-          query: options?.query
+      const config: AxiosRequestConfig = {
+        method,
+        url,
+        headers: {
+          'Content-Type': 'application/json',
         },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+        ...(method === 'get' || method === 'delete' ? { params: data } : { data }),
+      };
+      const response = await axios.request(config)
       return response
     }
     catch (err) {

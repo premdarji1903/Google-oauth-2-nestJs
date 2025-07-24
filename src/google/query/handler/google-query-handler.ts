@@ -27,10 +27,8 @@ export class GoogleQueryHandler implements IQueryHandler<GoogleQueryImpl> {
                     updatedAt: new Date()?.toISOString(),
                 }
 
-                const response = await this.commonService.callAxiosApi(process.env.AUTH_SVC_URL, {
-                    query: getMutationQuery(finalPayload),
-                })
-                const token = await response?.data?.data?.AUTH_SVC_AUTH_SVC_googleRegistration?.token
+                const response = await this.commonService.callAxiosApi(`${process.env.AUTH_SVC_URL}/google-registration`, 'post', { ...finalPayload })
+                const token = await response?.data?.token
                 // const userData = await this.getSessionToken(token)
                 return token
             }
@@ -68,10 +66,8 @@ export class GoogleQueryHandler implements IQueryHandler<GoogleQueryImpl> {
 
     async getSessionToken(token: string) {
         try {
-            const sessionResponse = await this.commonService.callAxiosApi(process.env.AUTH_SVC_URL, {
-                query: getSessionQuery(token),
-            })
-            const userData = sessionResponse?.data?.data?.AUTH_SVC_AUTH_SVC_getSessionById?.userData
+            const sessionResponse = await this.commonService.callAxiosApi(`${process.env.AUTH_SVC_URL}/get-session-by-id/${token}`,'get')
+            const userData = sessionResponse?.data?.userData
             return userData ?? {}
         }
         catch (err) {
